@@ -8,61 +8,64 @@
 // MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 // See the Mulan PSL v2 for more details.
 
-package errox
+package exception
 
 import "runtime"
 
 type Thrower struct {
-	waitCh chan Errox
+	expCh chan Exception
 }
 
 func (t Thrower) ThrowError(err error) {
-	t.waitCh <- Wrap(err)
+	t.expCh <- WrapError(err)
 	runtime.Goexit()
 }
 
-func (t Thrower) ThrowErrox(erx Errox) {
-	t.waitCh <- erx
+func (t Thrower) ThrowErrox(exp Exception) {
+	t.expCh <- exp
 	runtime.Goexit()
 }
 
 type Tryer struct {
-	tryBlock  func(*Thrower)
-	errox     Errox
+	tryBlock  func(Thrower)
+	exception     Exception
 	isCatched bool
 }
 
-func Try(tryBlock func(*Thrower)) *Tryer {
-	thrower := &Thrower{waitCh: make(chan Errox)}
+func Try(tryBlock func(Thrower)) *Tryer {
+	thrower := Thrower{expCh: make(chan Exception)}
 	go tryBlock(thrower)
-	erx := <-thrower.waitCh
-	return &Tryer{tryBlock: tryBlock, errox: erx}
+	exp := <-thrower.expCh
+	return &Tryer{tryBlock: tryBlock, exception: exp}
 }
 
-func (t *Tryer) Catch(erroxType string, catchBlock func(Errox)) *Tryer {
-	if !t.isCatched && erroxType == t.errox.Type() {
-		catchBlock(t.errox)
+func (t *Tryer) Catch(exceptionType string, catchBlock func(Exception)) *Tryer {
+	if !t.isCatched && exceptionType == t.exception.Type() {
+		catchBlock(t.exception)
 		t.isCatched = true
 	}
 	return t
 }
 
-func New(erroxType string) Errox {
-	return ErroxString{TypeString: erroxType}
+func NewException(exceptionType string) Exception {
+	return ExceptionString{TypeString: exceptionType}
 }
 
-type Errox interface {
+type Exception interface {
 	Type() string
 }
 
-type ErroxString struct {
+type ExceptionString struct {
 	TypeString string
 }
 
-func (e ErroxString) Type() string {
+func (e ExceptionString) Type() string {
 	return e.TypeString
 }
 
-func Wrap(err error) Errox {
-	return New(err.Error())
+func WrapError(err error) Exception {
+	if err == nil {
+		return nil
+	}
+	return NewException(err.Error())
 }

@@ -13,25 +13,48 @@ package errox_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	. "github.com/kongchengpro/errox"
 )
 
 func TestA(t *testing.T) {
-	Try(func(t *Thrower) {
-		err := ReturnError()
+	var content string
+	Try(func(t Thrower) {
+		content = MockReadFile(t)
+	}).Catch("unknow error", func(exp Exception) {
+		fmt.Println("handle unknow error")
+		content = "[error]"
+	})
+	fmt.Println(content)
+}
+
+func MockReadFile(t Thrower) string {
+	Try(func(t Thrower) {
+		err := MockIO()
 		if err != nil {
 			fmt.Println("fail!")
 			t.ThrowError(err)
 		}
 		fmt.Println("success!")
-	}).Catch("unknow error", func(erx Errox) {
-		fmt.Println("catch A")
-	}).Catch("some error", func(erx Errox) {
-		fmt.Println("catch the error: ", erx)
+	}).Catch("unknow error", func(exp Exception) {
+		fmt.Println("unknow error, throw up!")
+		t.ThrowErrox(exp)
+	}).Catch("IO error", func(exp Exception) {
+		fmt.Println("catch the error: ", exp)
 	})
+	return "some data"
 }
 
-func ReturnError() error {
-	return fmt.Errorf("some error")
+func MockIO() error {
+	t := time.Now().UnixNano()
+	n := t / 100 % 10 % 3
+	fmt.Println(n)
+	if n == 0 {
+		return nil
+	} else if n == 1 {
+		return fmt.Errorf("IO error")
+	} else {
+		return fmt.Errorf("unknow error")
+	}
 }
