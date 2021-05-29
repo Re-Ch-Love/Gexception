@@ -1,5 +1,5 @@
 // Copyright (c) 2021 KongchengPro
-// Errox is licensed under Mulan PSL v2.
+// Exception is licensed under Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
 //          http://license.coscl.org.cn/MulanPSL2
@@ -21,14 +21,14 @@ func (t Thrower) ThrowError(err error) {
 	runtime.Goexit()
 }
 
-func (t Thrower) ThrowErrox(exp Exception) {
+func (t Thrower) ThrowException(exp Exception) {
 	t.expCh <- exp
 	runtime.Goexit()
 }
 
 type Tryer struct {
 	tryBlock  func(Thrower)
-	exception     Exception
+	exception Exception
 	isCatched bool
 }
 

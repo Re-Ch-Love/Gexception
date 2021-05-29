@@ -1,5 +1,5 @@
 // Copyright (c) 2021 KongchengPro
-// Errox is licensed under Mulan PSL v2.
+// Exception is licensed under Mulan PSL v2.
 // You can use this software according to the terms and conditions of the Mulan PSL v2.
 // You may obtain a copy of Mulan PSL v2 at:
 //          http://license.coscl.org.cn/MulanPSL2
@@ -8,14 +8,14 @@
 // MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 // See the Mulan PSL v2 for more details.
 
-package errox_test
+package exception_test
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	. "github.com/kongchengpro/errox"
+	. "github.com/kongchengpro/exception"
 )
 
 func TestA(t *testing.T) {
@@ -39,7 +39,7 @@ func MockReadFile(t Thrower) string {
 		fmt.Println("success!")
 	}).Catch("unknow error", func(exp Exception) {
 		fmt.Println("unknow error, throw up!")
-		t.ThrowErrox(exp)
+		t.ThrowException(exp)
 	}).Catch("IO error", func(exp Exception) {
 		fmt.Println("catch the error: ", exp)
 	})
