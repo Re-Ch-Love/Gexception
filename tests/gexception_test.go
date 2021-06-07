@@ -8,7 +8,7 @@
 // MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 // See the Mulan PSL v2 for more details.
 
-package exception_test
+package tests
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ func TestA(t *testing.T) {
 	var content string
 	Try(func(t Thrower) {
 		content = MockReadFile(t)
-	}).Catch("unknow error", func(exp Exception) {
+	}).Catch("unknow error", func(e Exception) {
 		fmt.Println("handle unknow error")
 		content = "[error]"
 	})
@@ -37,11 +37,11 @@ func MockReadFile(t Thrower) string {
 			t.ThrowError(err)
 		}
 		fmt.Println("success!")
-	}).Catch("unknow error", func(exp Exception) {
+	}).Catch("unknow error", func(e Exception) {
 		fmt.Println("unknow error, throw up!")
-		t.ThrowException(exp)
-	}).Catch("IO error", func(exp Exception) {
-		fmt.Println("catch the error: ", exp)
+		t.ThrowException(e)
+	}).Catch("IO error", func(e Exception) {
+		fmt.Println("catch the error: ", e)
 	})
 	return "some data"
 }

@@ -13,16 +13,16 @@ package exception
 import "runtime"
 
 type Thrower struct {
-	expCh chan Exception
+	exceptionCh chan Exception
 }
 
 func (t Thrower) ThrowError(err error) {
-	t.expCh <- WrapError(err)
+	t.exceptionCh <- WrapError(err)
 	runtime.Goexit()
 }
 
-func (t Thrower) ThrowException(exp Exception) {
-	t.expCh <- exp
+func (t Thrower) ThrowException(e Exception) {
+	t.exceptionCh <- e
 	runtime.Goexit()
 }
 
@@ -33,10 +33,10 @@ type Tryer struct {
 }
 
 func Try(tryBlock func(Thrower)) *Tryer {
-	thrower := Thrower{expCh: make(chan Exception)}
+	thrower := Thrower{exceptionCh: make(chan Exception)}
 	go tryBlock(thrower)
-	exp := <-thrower.expCh
-	return &Tryer{tryBlock: tryBlock, exception: exp}
+	e := <-thrower.exceptionCh
+	return &Tryer{tryBlock: tryBlock, exception: e}
 }
 
 func (t *Tryer) Catch(exceptionType string, catchBlock func(Exception)) *Tryer {
@@ -47,25 +47,56 @@ func (t *Tryer) Catch(exceptionType string, catchBlock func(Exception)) *Tryer {
 	return t
 }
 
-func NewException(exceptionType string) Exception {
-	return ExceptionString{TypeString: exceptionType}
-}
+var (
+	BaseException_ = BaseException{
+		FatherException_: nil,
+		Type_:            "exception",
+		Error_:           "nil",
+	}
+)
 
 type Exception interface {
+	FatherType() Exception
 	Type() string
+	Error() string
 }
 
-type ExceptionString struct {
-	TypeString string
+type BaseException struct {
+	FatherException_ Exception
+	Type_            string
+	Error_           string
 }
 
-func (e ExceptionString) Type() string {
-	return e.TypeString
+func (e *BaseException) FatherType() Exception {
+	return e.FatherException_
+}
+
+func (e *BaseException) Type() string {
+	return e.Type_
+}
+
+func (e *BaseException) Error() string {
+	return e.Error_
 }
 
 func WrapError(err error) Exception {
 	if err == nil {
 		return nil
 	}
-	return NewException(err.Error())
+	return &BaseException{
+		FatherException_: &BaseException_,
+		Type_:            err.Error(),
+		Error_:           err.Error(),
+	}
+}
+
+// 判断e2是否属于e1，如果e1是e2的父级（父级的父级等也算）
+func Is(e1 Exception, e2 Exception) {
+	var e Exception
+	for {
+		e = e.FatherType()
+		if e.Type() == e1.Type() {
+			break
+		}
+	}
 }
